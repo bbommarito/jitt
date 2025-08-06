@@ -5,8 +5,10 @@ import (
 	"os/exec"
 )
 
+var Command = exec.Command
+
 func RunGit(args []string) error {
-	cmd := exec.Command("git", args...)
+	cmd := Command("git", args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
