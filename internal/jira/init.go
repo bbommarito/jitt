@@ -54,7 +54,16 @@ func Handle(args []string) {
 			return
 		}
 
-		err := os.WriteFile(".jira", []byte("# jitt config\n"), 0644)
+		var content string
+
+		if len(args) >= 2 {
+			project := args[1]
+			content = fmt.Sprintf("project = \"%s\"\n", project)
+		} else {
+			content = "# jitt config\n"
+		}
+
+		err := os.WriteFile(".jira", []byte(content), 0644)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error creating .jira: %v\n", err)
 			osExit(1)

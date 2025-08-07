@@ -44,6 +44,33 @@ func TestInit_CreatesJiraFileWhenInGitRepo(t *testing.T) {
 	assert.True(t, HasJiraFile())
 }
 
+func TestInit_CreatesJiraFileWithProject(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	err := os.Mkdir(filepath.Join(tmpDir, ".git"), 0755)
+	assert.NoError(t, err)
+
+	oldCwd, err := os.Getwd()
+	require.NoError(t, err)
+	defer func() {
+		require.NoError(t, os.Chdir(oldCwd))
+	}()
+
+	err = os.Chdir(tmpDir)
+	require.NoError(t, err)
+
+	var exitCode int
+	osExit = func(code int) { exitCode = code }
+	defer func() { osExit = os.Exit }()
+
+	Handle([]string{"init", "ABC"})
+
+	content, err := os.ReadFile(filepath.Join(tmpDir, ".jira"))
+	require.NoError(t, err)
+	require.Contains(t, string(content), `project = "ABC"`)
+	require.Equal(t, 0, exitCode)
+}
+
 func TestInit_FailsOutsideGitRepo(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldCwd, _ := os.Getwd()
