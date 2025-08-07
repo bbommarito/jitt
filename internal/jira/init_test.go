@@ -25,7 +25,7 @@ func TestHasJiraFile(t *testing.T) {
 	assert.True(t, HasJiraFile())
 }
 
-func TestInitCreatesJiraFile_WhenInGitRepo(t *testing.T) {
+func TestInit_CreatesJiraFileWhenInGitRepo(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := os.Mkdir(filepath.Join(tmpDir, ".git"), 0755)
@@ -44,7 +44,7 @@ func TestInitCreatesJiraFile_WhenInGitRepo(t *testing.T) {
 	assert.True(t, HasJiraFile())
 }
 
-func TestInitFailsOutsideGitRepo(t *testing.T) {
+func TestInit_FailsOutsideGitRepo(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldCwd, _ := os.Getwd()
 	require.NoError(t, os.Chdir(tmpDir))
@@ -57,7 +57,7 @@ func TestInitFailsOutsideGitRepo(t *testing.T) {
 	assert.False(t, HasJiraFile())
 }
 
-func TestInitFailsIfFileAlreadyExists(t *testing.T) {
+func TestInit_FailsIfFileAlreadyExists(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, ".git"), 0755))
