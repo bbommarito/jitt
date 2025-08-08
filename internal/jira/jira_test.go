@@ -2,175 +2,114 @@ package jira
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("Jira", func() {
-	Describe("HasJiraFile", func() {
-		var (
-			tmpDir string
-			oldCwd string
-		)
+var _ = Describe("jitt init command", func() {
+	var (
+		tmpDir string
+		oldCwd string
+	)
 
-		BeforeEach(func() {
-			tmpDir = GinkgoT().TempDir()
+	BeforeEach(func() {
+		tmpDir = GinkgoT().TempDir()
 
-			// Get current directory and expect it to succeed
-			var err error
-			oldCwd, err = os.Getwd()
-			Expect(err).To(Succeed())
+		var err error
+		oldCwd, err = os.Getwd()
+		Expect(err).To(Succeed())
+		Expect(os.Chdir(tmpDir)).To(Succeed())
+	})
 
-			// Change to temp directory
-			Expect(os.Chdir(tmpDir)).To(Succeed())
+	AfterEach(func() {
+		Expect(os.Chdir(oldCwd)).To(Succeed())
+	})
+
+	Context("outside a Git repository", func() {
+		It("should refuse to create .jira file with helpful error", func() {
+			command := exec.Command(pathToJittBinary, "init")
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(session).Should(gexec.Exit(1))
+			Expect(string(session.Err.Contents())).To(ContainSubstring("Not inside a Git repo"))
+			Expect(string(session.Err.Contents())).To(ContainSubstring(".jira not created"))
+
+			// Verify no .jira file was created
+			Expect(".jira").NotTo(BeAnExistingFile())
 		})
 
-		AfterEach(func() {
-			// Restore original directory
-			Expect(os.Chdir(oldCwd)).To(Succeed())
-		})
+		It("should refuse even when a project name is provided", func() {
+			command := exec.Command(pathToJittBinary, "init", "MYPROJECT")
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
 
-		Context("when no .jira file exists", func() {
-			It("should return false", func() {
-				Expect(HasJiraFile()).To(BeFalse())
-			})
-
-			It("should indicate .jira file is absent", func() {
-				Expect(".jira").NotTo(BeAnExistingFile())
-			})
-		})
-
-		Context("when .jira file exists", func() {
-			BeforeEach(func() {
-				// Write file and expect it to succeed
-				Expect(os.WriteFile(".jira", []byte("test"), 0o600)).To(Succeed())
-			})
-
-			It("should return true", func() {
-				Expect(HasJiraFile()).To(BeTrue())
-			})
-
-			It("should have the .jira file present", func() {
-				Expect(".jira").To(BeAnExistingFile())
-			})
-
-			It("should contain the expected content", func() {
-				Expect(".jira").To(BeAnExistingFile())
-
-				content, err := os.ReadFile(".jira")
-				Expect(err).To(Succeed())
-				Expect(content).To(Equal([]byte("test")))
-			})
+			Eventually(session).Should(gexec.Exit(1))
+			Expect(string(session.Err.Contents())).To(ContainSubstring("Not inside a Git repo"))
+			Expect(".jira").NotTo(BeAnExistingFile())
 		})
 	})
 
-	Describe("HandleInit command", func() {
-		var (
-			tmpDir         string
-			oldCwd         string
-			originalOsExit func(int)
-			exitCode       int
-		)
-
+	Context("inside a Git repository", func() {
 		BeforeEach(func() {
-			tmpDir = GinkgoT().TempDir()
-
-			// Get current directory and expect it to succeed
-			var err error
-			oldCwd, err = os.Getwd()
-			Expect(err).To(Succeed())
-
-			// Change to temp directory
-			Expect(os.Chdir(tmpDir)).To(Succeed())
-
-			// Mock os.Exit to capture exit code
-			originalOsExit = osExit
-			exitCode = -1
-			osExit = func(code int) {
-				exitCode = code
-			}
+			Expect(os.Mkdir(filepath.Join(tmpDir, ".git"), 0o755)).To(Succeed())
 		})
 
-		AfterEach(func() {
-			// Restore original directory and os.Exit
-			Expect(os.Chdir(oldCwd)).To(Succeed())
-			osExit = originalOsExit
+		Context("with no existing .jira file", func() {
+			It("should create .jira file with default content and show success message", func() {
+				command := exec.Command(pathToJittBinary, "init")
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(session).Should(gexec.Exit(0))
+				Expect(string(session.Out.Contents())).To(ContainSubstring(".jira created"))
+
+				// Verify file was created with correct content
+				Expect(".jira").To(BeAnExistingFile())
+				content, err := os.ReadFile(".jira")
+				Expect(err).To(Succeed())
+				Expect(string(content)).To(Equal("# jitt config\n"))
+			})
+
+			It("should create .jira file with project when provided", func() {
+				command := exec.Command(pathToJittBinary, "init", "TESTPROJ")
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(session).Should(gexec.Exit(0))
+				Expect(string(session.Out.Contents())).To(ContainSubstring(".jira created"))
+
+				// Verify file has project configuration
+				content, err := os.ReadFile(".jira")
+				Expect(err).To(Succeed())
+				contentStr := strings.TrimSpace(string(content))
+				Expect(contentStr).To(Equal(`project = "TESTPROJ"`))
+			})
 		})
 
-		Context("when inside a Git repository", func() {
+		Context("with existing .jira file", func() {
 			BeforeEach(func() {
-				// Create .git directory
-				Expect(os.Mkdir(filepath.Join(tmpDir, ".git"), 0o755)).To(Succeed())
+				Expect(os.WriteFile(".jira", []byte("existing config"), 0o600)).To(Succeed())
 			})
 
-			Context("when no .jira file exists", func() {
-				It("should create .jira file and not call exit (success)", func() {
-					HandleInit([]string{})
+			It("should refuse to overwrite and show helpful error", func() {
+				command := exec.Command(pathToJittBinary, "init")
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
 
-					Expect(exitCode).To(Equal(-1)) // osExit was never called
-					Expect(HasJiraFile()).To(BeTrue())
-				})
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(string(session.Err.Contents())).To(ContainSubstring(".jira already exists"))
+				Expect(string(session.Err.Contents())).To(ContainSubstring("not overwriting"))
 
-				It("should create .jira file with default content", func() {
-					HandleInit([]string{})
-
-					content, err := os.ReadFile(".jira")
-					Expect(err).To(Succeed())
-					Expect(string(content)).To(Equal("# jitt config\n"))
-				})
-			})
-
-			Context("when project name is provided", func() {
-				It("should create .jira file with project configuration", func() {
-					HandleInit([]string{"ABC"})
-
-					content, err := os.ReadFile(".jira")
-					Expect(err).To(Succeed())
-					Expect(string(content)).To(ContainSubstring(`project = "ABC"`))
-					Expect(exitCode).To(Equal(-1)) // osExit was never called (success)
-				})
-			})
-
-			Context("when .jira file already exists", func() {
-				BeforeEach(func() {
-					Expect(os.WriteFile(".jira", []byte("existing"), 0o600)).To(Succeed())
-				})
-
-				It("should fail and not overwrite existing file", func() {
-					HandleInit([]string{})
-
-					Expect(exitCode).NotTo(Equal(0))
-
-					data, err := os.ReadFile(".jira")
-					Expect(err).To(Succeed())
-					Expect(data).To(Equal([]byte("existing")))
-				})
-			})
-		})
-
-		Context("when outside a Git repository", func() {
-			It("should fail with proper error message and not create .jira file", func() {
-				HandleInit([]string{})
-
-				// Should exit with non-zero code
-				Expect(exitCode).To(Equal(1))
-
-				// Should not create any .jira file
-				Expect(HasJiraFile()).To(BeFalse())
-				Expect(".jira").NotTo(BeAnExistingFile())
-			})
-
-			It("should fail even with project name provided", func() {
-				HandleInit([]string{"TESTPROJ"})
-
-				// Should exit with non-zero code
-				Expect(exitCode).To(Equal(1))
-
-				// Should not create any .jira file
-				Expect(HasJiraFile()).To(BeFalse())
-				Expect(".jira").NotTo(BeAnExistingFile())
+				// Verify original content is preserved
+				content, err := os.ReadFile(".jira")
+				Expect(err).To(Succeed())
+				Expect(string(content)).To(Equal("existing config"))
 			})
 		})
 	})
