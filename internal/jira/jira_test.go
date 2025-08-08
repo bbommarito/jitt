@@ -1,4 +1,4 @@
-package jira_test
+package jira
 
 import (
 	"os"
@@ -6,8 +6,6 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"github.com/bbommarito/jitt/internal/jira"
 )
 
 var _ = Describe("Jira", func() {
@@ -36,7 +34,7 @@ var _ = Describe("Jira", func() {
 
 		Context("when no .jira file exists", func() {
 			It("should return false", func() {
-				Expect(jira.HasJiraFile()).To(BeFalse())
+				Expect(HasJiraFile()).To(BeFalse())
 			})
 			
 			It("should indicate .jira file is absent", func() {
@@ -51,7 +49,7 @@ var _ = Describe("Jira", func() {
 			})
 
 			It("should return true", func() {
-				Expect(jira.HasJiraFile()).To(BeTrue())
+				Expect(HasJiraFile()).To(BeTrue())
 			})
 			
 			It("should have the .jira file present", func() {
@@ -85,17 +83,17 @@ var _ = Describe("Jira", func() {
 			Expect(os.Chdir(tmpDir)).To(Succeed())
 			
 			// Mock os.Exit to capture exit code
-			originalOsExit = jira.GetOsExit()
+			originalOsExit = osExit
 			exitCode = -1
-			jira.SetOsExit(func(code int) { 
+			osExit = func(code int) { 
 				exitCode = code 
-			})
+			}
 		})
 
 		AfterEach(func() {
 			// Restore original directory and os.Exit
 			Expect(os.Chdir(oldCwd)).To(Succeed())
-			jira.SetOsExit(originalOsExit)
+			osExit = originalOsExit
 		})
 
 		Context("when inside a Git repository", func() {
@@ -106,14 +104,14 @@ var _ = Describe("Jira", func() {
 
 			Context("when no .jira file exists", func() {
 				It("should create .jira file and not call exit (success)", func() {
-					jira.Handle([]string{"init"})
+					Handle([]string{"init"})
 					
 					Expect(exitCode).To(Equal(-1)) // osExit was never called
-					Expect(jira.HasJiraFile()).To(BeTrue())
+					Expect(HasJiraFile()).To(BeTrue())
 				})
 				
 				It("should create .jira file with default content", func() {
-					jira.Handle([]string{"init"})
+					Handle([]string{"init"})
 					
 					content, err := os.ReadFile(".jira")
 					Expect(err).To(Succeed())
@@ -123,7 +121,7 @@ var _ = Describe("Jira", func() {
 
 			Context("when project name is provided", func() {
 				It("should create .jira file with project configuration", func() {
-					jira.Handle([]string{"init", "ABC"})
+					Handle([]string{"init", "ABC"})
 					
 					content, err := os.ReadFile(".jira")
 					Expect(err).To(Succeed())
@@ -138,7 +136,7 @@ var _ = Describe("Jira", func() {
 				})
 
 				It("should fail and not overwrite existing file", func() {
-					jira.Handle([]string{"init"})
+					Handle([]string{"init"})
 					
 					Expect(exitCode).NotTo(Equal(0))
 					
@@ -151,10 +149,10 @@ var _ = Describe("Jira", func() {
 
 		Context("when outside a Git repository", func() {
 			It("should fail and not create .jira file", func() {
-				jira.Handle([]string{"init"})
+				Handle([]string{"init"})
 				
 				Expect(exitCode).NotTo(Equal(0))
-				Expect(jira.HasJiraFile()).To(BeFalse())
+				Expect(HasJiraFile()).To(BeFalse())
 			})
 		})
 	})
