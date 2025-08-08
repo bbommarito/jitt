@@ -6,10 +6,7 @@ import (
 	"path/filepath"
 )
 
-const (
-	minArgsForProject = 2
-	jiraFilePerms     = 0o600
-)
+const jiraFilePerms = 0o600
 
 var osExit = os.Exit
 
@@ -38,46 +35,35 @@ func isGitRepo() bool {
 	}
 }
 
-func Handle(args []string) {
-	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "jitt jira: no command given")
+// HandleInit handles the 'jitt init' command
+func HandleInit(args []string) {
+	if !isGitRepo() {
+		fmt.Fprintln(os.Stderr, "Not inside a Git repo. .jira not created")
 		osExit(1)
 		return
 	}
 
-	switch args[0] {
-	case "init":
-		if !isGitRepo() {
-			fmt.Fprintln(os.Stderr, "Not inside a Git repo. .jira not created")
-			osExit(1)
-			return
-		}
-
-		if HasJiraFile() {
-			fmt.Fprintln(os.Stderr, ".jira already exists — not overwriting.")
-			osExit(1)
-			return
-		}
-
-		var content string
-
-		if len(args) >= minArgsForProject {
-			project := args[1]
-			content = fmt.Sprintf("project = %q\n", project)
-		} else {
-			content = "# jitt config\n"
-		}
-
-		err := os.WriteFile(".jira", []byte(content), jiraFilePerms)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error creating .jira: %v\n", err)
-			osExit(1)
-			return
-		}
-
-		fmt.Println(".jira created")
-	default:
-		fmt.Fprintf(os.Stderr, "jitt jira: %q not recognized\n", args[0])
+	if HasJiraFile() {
+		fmt.Fprintln(os.Stderr, ".jira already exists — not overwriting.")
 		osExit(1)
+		return
 	}
+
+	var content string
+
+	if len(args) >= 1 {
+		project := args[0]
+		content = fmt.Sprintf("project = %q\n", project)
+	} else {
+		content = "# jitt config\n"
+	}
+
+	err := os.WriteFile(".jira", []byte(content), jiraFilePerms)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating .jira: %v\n", err)
+		osExit(1)
+		return
+	}
+
+	fmt.Println(".jira created")
 }

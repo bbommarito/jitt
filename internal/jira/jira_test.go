@@ -63,7 +63,7 @@ var _ = Describe("Jira", func() {
 		})
 	})
 
-	Describe("Handle init command", func() {
+	Describe("HandleInit command", func() {
 		var (
 			tmpDir         string
 			oldCwd         string
@@ -104,14 +104,14 @@ var _ = Describe("Jira", func() {
 
 			Context("when no .jira file exists", func() {
 				It("should create .jira file and not call exit (success)", func() {
-					Handle([]string{"init"})
+					HandleInit([]string{})
 
 					Expect(exitCode).To(Equal(-1)) // osExit was never called
 					Expect(HasJiraFile()).To(BeTrue())
 				})
 
 				It("should create .jira file with default content", func() {
-					Handle([]string{"init"})
+					HandleInit([]string{})
 
 					content, err := os.ReadFile(".jira")
 					Expect(err).To(Succeed())
@@ -121,7 +121,7 @@ var _ = Describe("Jira", func() {
 
 			Context("when project name is provided", func() {
 				It("should create .jira file with project configuration", func() {
-					Handle([]string{"init", "ABC"})
+					HandleInit([]string{"ABC"})
 
 					content, err := os.ReadFile(".jira")
 					Expect(err).To(Succeed())
@@ -136,7 +136,7 @@ var _ = Describe("Jira", func() {
 				})
 
 				It("should fail and not overwrite existing file", func() {
-					Handle([]string{"init"})
+					HandleInit([]string{})
 
 					Expect(exitCode).NotTo(Equal(0))
 
@@ -149,7 +149,7 @@ var _ = Describe("Jira", func() {
 
 		Context("when outside a Git repository", func() {
 			It("should fail and not create .jira file", func() {
-				Handle([]string{"init"})
+				HandleInit([]string{})
 
 				Expect(exitCode).NotTo(Equal(0))
 				Expect(HasJiraFile()).To(BeFalse())

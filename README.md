@@ -17,10 +17,11 @@ A lightweight wrapper for Git that adds project-specific enhancements — starti
 
 Right now, jitt:
 
-- Passes any unknown commands straight through to Git
-- Adds a basic `jitt jira init` command, which creates a `.jira` file in the current Git repo
+- Provides a clean `jitt init` command that creates a `.jira` configuration file in Git repositories
 - Avoids accidental `.jira` creation outside a Git repo
+- Supports optional project configuration: `jitt init ABC` 
 - Lays the foundation for smarter Jira integration (like enforcing ticket prefixes in commit messages)
+- Includes helpful usage information and error messages
 
 ---
 
@@ -40,15 +41,36 @@ I'm here to learn, improve, and have fun along the way.
 
 ---
 
-## 🚧 Roadmap
+## 😧 Roadmap
 
 Planned features (each added carefully and test-first):
 
-- ✅ `jitt jira init` command
+- ✅ `jitt init` command for .jira configuration
+- ⏳ `jitt validate` command for pre-commit hooks
 - ⏳ Enforce ticket key pattern in commits (e.g., `ABC-123: message`)
-- ⏳ Add `jitt jira validate` for pre-commit hooks
-- ⏳ Configurable Jira key prefixes
-- ⏳ Optional project scaffolding (`.jira.json`, `.gitignore`, etc.)
+- ⏳ Configurable Jira key prefixes and patterns
+- ⏳ `jitt status` to show current project configuration
+- ⏳ Integration with git hooks
+
+---
+
+## 🚀 Usage
+
+```bash
+# Initialize a .jira config file in your Git repository
+jitt init
+
+# Initialize with a specific project key
+jitt init ABC
+
+# Show help
+jitt help
+```
+
+The `jitt init` command will:
+- Check that you're inside a Git repository
+- Create a `.jira` file with configuration
+- Refuse to overwrite an existing `.jira` file
 
 ---
 

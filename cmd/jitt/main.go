@@ -1,25 +1,41 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
-	"github.com/bbommarito/jitt/internal/gitpassthrough"
 	"github.com/bbommarito/jitt/internal/jira"
 )
 
 func main() {
 	args := os.Args[1:]
 	if len(args) < 1 {
+		printUsage()
 		os.Exit(1)
 	}
 
 	switch args[0] {
-	case "jira":
-		jira.Handle(args[1:])
+	case "init":
+		jira.HandleInit(args[1:])
+	case "help", "--help", "-h":
+		printUsage()
 	default:
-		err := gitpassthrough.RunGit(args)
-		if err != nil {
-			os.Exit(1)
-		}
+		fmt.Fprintf(os.Stderr, "jitt: unknown command %q\n\n", args[0])
+		printUsage()
+		os.Exit(1)
 	}
+}
+
+func printUsage() {
+	fmt.Println("jitt - Jira + Git + Tiny Tooling")
+	fmt.Println()
+	fmt.Println("Usage: jitt <command> [arguments]")
+	fmt.Println()
+	fmt.Println("Commands:")
+	fmt.Println("  init [project]    Initialize .jira configuration file")
+	fmt.Println("  help              Show this help message")
+	fmt.Println()
+	fmt.Println("Examples:")
+	fmt.Println("  jitt init         # Create .jira file with default config")
+	fmt.Println("  jitt init ABC     # Create .jira file with project=ABC")
 }
