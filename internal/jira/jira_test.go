@@ -58,7 +58,10 @@ var _ = Describe("Jira", func() {
 
 			It("should contain the expected content", func() {
 				Expect(".jira").To(BeAnExistingFile())
-				Expect(os.ReadFile(".jira")).To(Equal([]byte("test")))
+
+				content, err := os.ReadFile(".jira")
+				Expect(err).To(Succeed())
+				Expect(content).To(Equal([]byte("test")))
 			})
 		})
 	})
