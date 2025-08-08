@@ -17,12 +17,12 @@ var _ = Describe("Jira", func() {
 
 		BeforeEach(func() {
 			tmpDir = GinkgoT().TempDir()
-			
+
 			// Get current directory and expect it to succeed
 			var err error
 			oldCwd, err = os.Getwd()
 			Expect(err).To(Succeed())
-			
+
 			// Change to temp directory
 			Expect(os.Chdir(tmpDir)).To(Succeed())
 		})
@@ -36,7 +36,7 @@ var _ = Describe("Jira", func() {
 			It("should return false", func() {
 				Expect(HasJiraFile()).To(BeFalse())
 			})
-			
+
 			It("should indicate .jira file is absent", func() {
 				Expect(".jira").NotTo(BeAnExistingFile())
 			})
@@ -44,18 +44,18 @@ var _ = Describe("Jira", func() {
 
 		Context("when .jira file exists", func() {
 			BeforeEach(func() {
-				// Write file and expect it to succeed  
-				Expect(os.WriteFile(".jira", []byte("test"), 0644)).To(Succeed())
+				// Write file and expect it to succeed
+				Expect(os.WriteFile(".jira", []byte("test"), 0o600)).To(Succeed())
 			})
 
 			It("should return true", func() {
 				Expect(HasJiraFile()).To(BeTrue())
 			})
-			
+
 			It("should have the .jira file present", func() {
 				Expect(".jira").To(BeAnExistingFile())
 			})
-			
+
 			It("should contain the expected content", func() {
 				Expect(".jira").To(BeAnExistingFile())
 				Expect(os.ReadFile(".jira")).To(Equal([]byte("test")))
@@ -65,28 +65,28 @@ var _ = Describe("Jira", func() {
 
 	Describe("Handle init command", func() {
 		var (
-			tmpDir string
-			oldCwd string
+			tmpDir         string
+			oldCwd         string
 			originalOsExit func(int)
-			exitCode int
+			exitCode       int
 		)
 
 		BeforeEach(func() {
 			tmpDir = GinkgoT().TempDir()
-			
+
 			// Get current directory and expect it to succeed
 			var err error
 			oldCwd, err = os.Getwd()
 			Expect(err).To(Succeed())
-			
+
 			// Change to temp directory
 			Expect(os.Chdir(tmpDir)).To(Succeed())
-			
+
 			// Mock os.Exit to capture exit code
 			originalOsExit = osExit
 			exitCode = -1
-			osExit = func(code int) { 
-				exitCode = code 
+			osExit = func(code int) {
+				exitCode = code
 			}
 		})
 
@@ -99,20 +99,20 @@ var _ = Describe("Jira", func() {
 		Context("when inside a Git repository", func() {
 			BeforeEach(func() {
 				// Create .git directory
-				Expect(os.Mkdir(filepath.Join(tmpDir, ".git"), 0755)).To(Succeed())
+				Expect(os.Mkdir(filepath.Join(tmpDir, ".git"), 0o755)).To(Succeed())
 			})
 
 			Context("when no .jira file exists", func() {
 				It("should create .jira file and not call exit (success)", func() {
 					Handle([]string{"init"})
-					
+
 					Expect(exitCode).To(Equal(-1)) // osExit was never called
 					Expect(HasJiraFile()).To(BeTrue())
 				})
-				
+
 				It("should create .jira file with default content", func() {
 					Handle([]string{"init"})
-					
+
 					content, err := os.ReadFile(".jira")
 					Expect(err).To(Succeed())
 					Expect(string(content)).To(Equal("# jitt config\n"))
@@ -122,7 +122,7 @@ var _ = Describe("Jira", func() {
 			Context("when project name is provided", func() {
 				It("should create .jira file with project configuration", func() {
 					Handle([]string{"init", "ABC"})
-					
+
 					content, err := os.ReadFile(".jira")
 					Expect(err).To(Succeed())
 					Expect(string(content)).To(ContainSubstring(`project = "ABC"`))
@@ -132,14 +132,14 @@ var _ = Describe("Jira", func() {
 
 			Context("when .jira file already exists", func() {
 				BeforeEach(func() {
-					Expect(os.WriteFile(".jira", []byte("existing"), 0644)).To(Succeed())
+					Expect(os.WriteFile(".jira", []byte("existing"), 0o600)).To(Succeed())
 				})
 
 				It("should fail and not overwrite existing file", func() {
 					Handle([]string{"init"})
-					
+
 					Expect(exitCode).NotTo(Equal(0))
-					
+
 					data, err := os.ReadFile(".jira")
 					Expect(err).To(Succeed())
 					Expect(data).To(Equal([]byte("existing")))
@@ -150,7 +150,7 @@ var _ = Describe("Jira", func() {
 		Context("when outside a Git repository", func() {
 			It("should fail and not create .jira file", func() {
 				Handle([]string{"init"})
-				
+
 				Expect(exitCode).NotTo(Equal(0))
 				Expect(HasJiraFile()).To(BeFalse())
 			})

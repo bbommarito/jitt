@@ -6,6 +6,11 @@ import (
 	"path/filepath"
 )
 
+const (
+	minArgsForProject = 2
+	jiraFilePerms     = 0o600
+)
+
 var osExit = os.Exit
 
 func HasJiraFile() bool {
@@ -56,14 +61,14 @@ func Handle(args []string) {
 
 		var content string
 
-		if len(args) >= 2 {
+		if len(args) >= minArgsForProject {
 			project := args[1]
-			content = fmt.Sprintf("project = \"%s\"\n", project)
+			content = fmt.Sprintf("project = %q\n", project)
 		} else {
 			content = "# jitt config\n"
 		}
 
-		err := os.WriteFile(".jira", []byte(content), 0644)
+		err := os.WriteFile(".jira", []byte(content), jiraFilePerms)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error creating .jira: %v\n", err)
 			osExit(1)

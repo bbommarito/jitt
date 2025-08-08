@@ -1,9 +1,10 @@
 package main
 
 import (
+	"os"
+
 	"github.com/bbommarito/jitt/internal/gitpassthrough"
 	"github.com/bbommarito/jitt/internal/jira"
-	"os"
 )
 
 func main() {
