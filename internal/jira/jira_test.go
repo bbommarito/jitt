@@ -151,11 +151,26 @@ var _ = Describe("Jira", func() {
 		})
 
 		Context("when outside a Git repository", func() {
-			It("should fail and not create .jira file", func() {
+			It("should fail with proper error message and not create .jira file", func() {
 				HandleInit([]string{})
 
-				Expect(exitCode).NotTo(Equal(0))
+				// Should exit with non-zero code
+				Expect(exitCode).To(Equal(1))
+
+				// Should not create any .jira file
 				Expect(HasJiraFile()).To(BeFalse())
+				Expect(".jira").NotTo(BeAnExistingFile())
+			})
+
+			It("should fail even with project name provided", func() {
+				HandleInit([]string{"TESTPROJ"})
+
+				// Should exit with non-zero code
+				Expect(exitCode).To(Equal(1))
+
+				// Should not create any .jira file
+				Expect(HasJiraFile()).To(BeFalse())
+				Expect(".jira").NotTo(BeAnExistingFile())
 			})
 		})
 	})
