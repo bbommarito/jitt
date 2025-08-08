@@ -11,6 +11,7 @@
 # Go output of go build
 bin/
 dist/
+jitt
 
 # Go coverage files
 *.out
