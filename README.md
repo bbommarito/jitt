@@ -54,10 +54,31 @@ Planned features (each added carefully and test-first):
 
 ## 📦 Installation
 
-It's early days, so there’s no fancy install script yet. For now:
+### Quick Install
 
 ```bash
 go install github.com/bbommarito/jitt@latest
+```
+
+### Development
+
+For development, clone the repo and use the provided Makefile:
+
+```bash
+git clone https://github.com/bbommarito/jitt.git
+cd jitt
+
+# Set up development environment
+make dev-setup
+
+# Build the binary
+make build
+
+# Run tests
+make test
+
+# See all available commands
+make help
 ```
 
 ---
