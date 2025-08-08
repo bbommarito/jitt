@@ -8,6 +8,16 @@ import (
 
 var osExit = os.Exit
 
+// GetOsExit returns the current osExit function (for testing)
+func GetOsExit() func(int) {
+	return osExit
+}
+
+// SetOsExit sets the osExit function (for testing)
+func SetOsExit(fn func(int)) {
+	osExit = fn
+}
+
 func HasJiraFile() bool {
 	_, err := os.Stat(".jira")
 	return err == nil
