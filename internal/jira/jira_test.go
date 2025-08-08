@@ -11,6 +11,19 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
+var pathToJittBinary string
+
+var _ = BeforeSuite(func() {
+	var err error
+	// Build the jitt binary for testing
+	pathToJittBinary, err = gexec.Build("github.com/bbommarito/jitt/cmd/jitt")
+	Expect(err).NotTo(HaveOccurred())
+})
+
+var _ = AfterSuite(func() {
+	gexec.CleanupBuildArtifacts()
+})
+
 var _ = Describe("jitt init command", func() {
 	var (
 		tmpDir string
@@ -52,6 +65,18 @@ var _ = Describe("jitt init command", func() {
 			Eventually(session).Should(gexec.Exit(1))
 			Expect(string(session.Err.Contents())).To(ContainSubstring("Not inside a Git repo"))
 			Expect(".jira").NotTo(BeAnExistingFile())
+		})
+
+		It("should show helpful help message", func() {
+			command := exec.Command(pathToJittBinary, "help")
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(session).Should(gexec.Exit(0))
+			output := string(session.Out.Contents())
+			Expect(output).To(ContainSubstring("jitt - Jira + Git + Tiny Tooling"))
+			Expect(output).To(ContainSubstring("init [project]"))
+			Expect(output).To(ContainSubstring("Initialize .jira configuration file"))
 		})
 	})
 
