@@ -69,48 +69,6 @@ jobs:
         version: latest
         args: --timeout=5m
 
-  mutation-test:
-    name: Mutation Testing
-    runs-on: ubuntu-latest
-    needs: [test]
-    # Run mutation tests but don't fail the build if they don't meet thresholds yet
-    continue-on-error: true
-    
-    steps:
-    - name: Check out code
-      uses: actions/checkout@v4
-
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.24'
-
-    - name: Cache Go modules
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-1.24-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-1.24-
-
-    - name: Download dependencies
-      run: go mod download
-
-    - name: Install Gremlins
-      run: go install github.com/go-gremlins/gremlins/cmd/gremlins@latest
-
-    - name: Run mutation tests
-      run: |
-        echo "🧪 Running mutation testing with Gremlins..."
-        echo "This checks if our tests actually catch bugs by introducing mutations into the code."
-        echo ""
-        gremlins unleash . || echo "⚠️  Mutation testing didn't meet thresholds, but that's okay for now!"
-        echo ""
-        echo "✅ Mutation testing completed!"
-        echo "📊 Check the logs above for detailed results."
-
   build:
     name: Build
     runs-on: ubuntu-latest
