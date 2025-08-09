@@ -6,15 +6,10 @@ on:
   # Run weekly on Sundays at 2 AM UTC  
   schedule:
     - cron: '0 2 * * 0'
-  # Run on pushes to main that change Go code (but not on every push)
-  push:
-    branches: [ main ]
-    paths:
-      - '**.go'
-      - 'go.mod' 
-      - 'go.sum'
-      - '.gremlins.yml'
-      - '.github/workflows/mutation-test.yml'
+  # Removed push trigger to prevent running on every push
+  # Mutation testing now only runs:
+  # - Weekly on Sundays (scheduled)
+  # - When manually triggered (workflow_dispatch)
 
 jobs:
   mutation-test:
