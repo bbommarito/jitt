@@ -1,4 +1,4 @@
-package jira
+package jitt
 
 import (
 	. "github.com/onsi/ginkgo/v2"

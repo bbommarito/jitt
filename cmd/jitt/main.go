@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bbommarito/jitt/internal/jira"
+	"github.com/bbommarito/jitt/internal/jitt"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 
 	switch args[0] {
 	case "init":
-		jira.HandleInit(args[1:])
+		jitt.HandleInit(args[1:])
 	case "help", "--help", "-h":
 		printUsage()
 	default:

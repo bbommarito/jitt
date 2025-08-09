@@ -1,4 +1,4 @@
-package jira
+package jitt
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestJira(t *testing.T) {
+func TestJitt(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Jira Suite")
+	RunSpecs(t, "Jitt Suite")
 }
