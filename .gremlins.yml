@@ -1,0 +1,9 @@
+# Gremlins mutation testing configuration
+
+# Quality thresholds
+threshold-efficacy: 80.0
+threshold-mcover: 90.0
+
+# Performance settings
+workers: 4
+timeout-coefficient: 2

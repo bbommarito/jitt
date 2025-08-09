@@ -20,6 +20,12 @@ test-coverage: ## Run tests with coverage
 	go test -v -race -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
 
+test-mutation: ## Run mutation tests
+	gremlins unleash .
+
+test-mutation-dry: ## Run mutation tests in dry-run mode
+	gremlins unleash . --dry-run
+
 lint: ## Run golangci-lint
 	golangci-lint run
 
@@ -31,6 +37,7 @@ clean: ## Clean build artifacts
 	rm -f jitt
 	rm -rf dist/
 	rm -f coverage.out coverage.html
+	rm -f gremlins.log
 
 build-all: ## Build for all platforms
 	mkdir -p dist
@@ -51,4 +58,5 @@ dev-setup: ## Set up development environment
 	go install github.com/onsi/ginkgo/v2/ginkgo@latest
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	go install golang.org/x/tools/cmd/goimports@latest
+	go install github.com/go-gremlins/gremlins/cmd/gremlins@latest
 	@echo "Development environment ready!"
