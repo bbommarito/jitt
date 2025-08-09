@@ -135,6 +135,27 @@ go install github.com/onsi/ginkgo/v2/ginkgo@latest
 ginkgo -r -v
 ```
 
+### Mutation Testing
+
+This project uses [Gremlins](https://github.com/go-gremlins/gremlins) for mutation testing, which evaluates the quality of our test suite by introducing bugs and checking if tests catch them.
+
+```bash
+# Install Gremlins
+go install github.com/go-gremlins/gremlins/cmd/gremlins@latest
+
+# Run mutation tests (quick analysis)
+make test-mutation-dry
+
+# Run full mutation tests
+make test-mutation
+```
+
+**Current Metrics:**
+- Test Efficacy: 100% (when we test something, we catch bugs!)
+- Mutator Coverage: ~17% (realistic for CLI with system interactions)
+
+**Philosophy:** We focus on high efficacy rather than high coverage. Many mutations represent system-level failures (like `os.Getwd()` errors) that are impractical to test. Our goal is to ensure that the business logic mutations are thoroughly tested.
+
 ---
 
 ## ❤️ Contributions welcome
