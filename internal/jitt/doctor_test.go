@@ -10,6 +10,22 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
+// Helper function to reduce test duplication
+func runDoctorCommand() *gexec.Session {
+	command := exec.Command(pathToJittBinary, "doctor")
+	session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+	Expect(err).NotTo(HaveOccurred())
+	return session
+}
+
+// Helper function to verify common doctor output patterns
+func expectDoctorOutput(session *gexec.Session, expectedStrings []string) {
+	output := string(session.Out.Contents())
+	for _, expected := range expectedStrings {
+		Expect(output).To(ContainSubstring(expected))
+	}
+}
+
 var _ = Describe("jitt doctor command", func() {
 	var (
 		tmpDir string
@@ -67,16 +83,15 @@ var _ = Describe("jitt doctor command", func() {
 			})
 
 			It("should show warning about missing project but exit successfully", func() {
-				command := exec.Command(pathToJittBinary, "doctor")
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
+				session := runDoctorCommand()
 
 				Eventually(session).Should(gexec.Exit(0))
-				output := string(session.Out.Contents())
-				Expect(output).To(ContainSubstring("✅ Git repository found"))
-				Expect(output).To(ContainSubstring("✅ .jitt.yaml file exists"))
-				Expect(output).To(ContainSubstring("⚠️  No project configured in .jitt.yaml"))
-				Expect(output).To(ContainSubstring("✨ Setup is functional but could be improved"))
+				expectDoctorOutput(session, []string{
+					"✅ Git repository found",
+					"✅ .jitt.yaml file exists",
+					"⚠️  No project configured in .jitt.yaml",
+					"✨ Setup is functional but could be improved",
+				})
 			})
 		})
 
@@ -86,16 +101,15 @@ var _ = Describe("jitt doctor command", func() {
 			})
 
 			It("should report everything is good", func() {
-				command := exec.Command(pathToJittBinary, "doctor")
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
+				session := runDoctorCommand()
 
 				Eventually(session).Should(gexec.Exit(0))
-				output := string(session.Out.Contents())
-				Expect(output).To(ContainSubstring("✅ Git repository found"))
-				Expect(output).To(ContainSubstring("✅ .jitt.yaml file exists"))
-				Expect(output).To(ContainSubstring("✅ Project configured: TESTPROJ"))
-				Expect(output).To(ContainSubstring("🎉 Everything looks good!"))
+				expectDoctorOutput(session, []string{
+					"✅ Git repository found",
+					"✅ .jitt.yaml file exists",
+					"✅ Project configured: TESTPROJ",
+					"🎉 Everything looks good!",
+				})
 			})
 		})
 

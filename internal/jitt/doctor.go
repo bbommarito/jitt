@@ -26,11 +26,12 @@ func HandleDoctor(args []string) {
 
 		// Check if there's a project configured
 		cfg, err := config.Load()
-		if err != nil {
+		switch {
+		case err != nil:
 			issues = append(issues, fmt.Sprintf("❌ Error loading .jitt.yaml: %v", err))
-		} else if cfg.Jira.Project == "" {
+		case cfg.Jira.Project == "":
 			warnings = append(warnings, "⚠️  No project configured in .jitt.yaml")
-		} else {
+		default:
 			fmt.Printf("✅ Project configured: %s\n", cfg.Jira.Project)
 		}
 	}

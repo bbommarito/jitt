@@ -26,7 +26,7 @@ var _ = Describe("Config package", func() {
 		oldCwd, err = os.Getwd()
 		Expect(err).To(Succeed())
 		Expect(os.Chdir(tmpDir)).To(Succeed())
-		
+
 		// Reset viper state to avoid interference between tests
 		viper.Reset()
 	})
@@ -178,7 +178,7 @@ var _ = Describe("Config package", func() {
 
 			AfterEach(func() {
 				// Restore permissions for cleanup
-				os.Chmod(".jitt.yaml", 0o600)
+				_ = os.Chmod(".jitt.yaml", 0o600)
 			})
 
 			It("should return error reading config file", func() {
