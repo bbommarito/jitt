@@ -17,6 +17,8 @@ func main() {
 	switch args[0] {
 	case "init":
 		jitt.HandleInit(args[1:])
+	case "config":
+		jitt.HandleConfig(args[1:])
 	case "doctor":
 		jitt.HandleDoctor(args[1:])
 	case "help", "--help", "-h":
@@ -35,11 +37,15 @@ func printUsage() {
 	fmt.Println()
 	fmt.Println("Commands:")
 	fmt.Println("  init [project]    Initialize .jitt.yaml configuration file")
+	fmt.Println("  config [key] [value]  Get or set configuration values")
 	fmt.Println("  doctor            Check project setup and configuration")
 	fmt.Println("  help              Show this help message")
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Println("  jitt init         # Create .jitt.yaml file with empty project")
 	fmt.Println("  jitt init ABC     # Create .jitt.yaml file with project=ABC")
+	fmt.Println("  jitt config       # Show all configuration")
+	fmt.Println("  jitt config project       # Show current project")
+	fmt.Println("  jitt config project XYZ   # Set project to XYZ")
 	fmt.Println("  jitt doctor       # Check if setup is correct")
 }

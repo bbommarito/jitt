@@ -53,3 +53,25 @@ func Create(project string) error {
 
 	return viper.WriteConfigAs(".jitt.yaml")
 }
+
+// Update updates an existing config file with new values
+func Update(key, value string) error {
+	if !Exists() {
+		return fmt.Errorf("config file not found - run 'jitt init' first")
+	}
+
+	// Load existing config first
+	viper.SetConfigName(".jitt")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(".")
+
+	if err := viper.ReadInConfig(); err != nil {
+		return fmt.Errorf("error reading config file: %w", err)
+	}
+
+	// Set the new value
+	viper.Set(key, value)
+
+	// Write back to file
+	return viper.WriteConfig()
+}
