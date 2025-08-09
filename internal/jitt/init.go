@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-)
 
-const jiraFilePerms = 0o600
+	"github.com/bbommarito/jitt/internal/config"
+)
 
 var osExit = os.Exit
 
-func HasJiraFile() bool {
-	_, err := os.Stat(".jira")
-	return err == nil
+func HasConfigFile() bool {
+	return config.Exists()
 }
 
 func isGitRepo() bool {
@@ -38,32 +37,28 @@ func isGitRepo() bool {
 // HandleInit handles the 'jitt init' command
 func HandleInit(args []string) {
 	if !isGitRepo() {
-		fmt.Fprintln(os.Stderr, "Not inside a Git repo. .jira not created")
+		fmt.Fprintln(os.Stderr, "Not inside a Git repo. Config not created")
 		osExit(1)
 		return
 	}
 
-	if HasJiraFile() {
-		fmt.Fprintln(os.Stderr, ".jira already exists — not overwriting.")
+	if HasConfigFile() {
+		fmt.Fprintln(os.Stderr, ".jitt.yaml already exists — not overwriting.")
 		osExit(1)
 		return
 	}
 
-	var content string
-
+	var project string
 	if len(args) >= 1 {
-		project := args[0]
-		content = fmt.Sprintf("project = %q\n", project)
-	} else {
-		content = "# jitt config\n"
+		project = args[0]
 	}
 
-	err := os.WriteFile(".jira", []byte(content), jiraFilePerms)
+	err := config.Create(project)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating .jira: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error creating .jitt.yaml: %v\n", err)
 		osExit(1)
 		return
 	}
 
-	fmt.Println(".jira created")
+	fmt.Println(".jitt.yaml created")
 }

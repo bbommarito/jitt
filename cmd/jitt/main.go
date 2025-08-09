@@ -32,10 +32,10 @@ func printUsage() {
 	fmt.Println("Usage: jitt <command> [arguments]")
 	fmt.Println()
 	fmt.Println("Commands:")
-	fmt.Println("  init [project]    Initialize .jira configuration file")
+	fmt.Println("  init [project]    Initialize .jitt.yaml configuration file")
 	fmt.Println("  help              Show this help message")
 	fmt.Println()
 	fmt.Println("Examples:")
-	fmt.Println("  jitt init         # Create .jira file with default config")
-	fmt.Println("  jitt init ABC     # Create .jira file with project=ABC")
+	fmt.Println("  jitt init         # Create .jitt.yaml file with empty project")
+	fmt.Println("  jitt init ABC     # Create .jitt.yaml file with project=ABC")
 }

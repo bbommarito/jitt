@@ -4,7 +4,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -31,17 +30,17 @@ var _ = Describe("jitt init command", func() {
 	})
 
 	Context("outside a Git repository", func() {
-		It("should refuse to create .jira file with helpful error", func() {
+		It("should refuse to create config file with helpful error", func() {
 			command := exec.Command(pathToJittBinary, "init")
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(session).Should(gexec.Exit(1))
 			Expect(string(session.Err.Contents())).To(ContainSubstring("Not inside a Git repo"))
-			Expect(string(session.Err.Contents())).To(ContainSubstring(".jira not created"))
+			Expect(string(session.Err.Contents())).To(ContainSubstring("Config not created"))
 
-			// Verify no .jira file was created
-			Expect(".jira").NotTo(BeAnExistingFile())
+			// Verify no config file was created
+			Expect(".jitt.yaml").NotTo(BeAnExistingFile())
 		})
 
 		It("should refuse even when a project name is provided", func() {
@@ -51,7 +50,7 @@ var _ = Describe("jitt init command", func() {
 
 			Eventually(session).Should(gexec.Exit(1))
 			Expect(string(session.Err.Contents())).To(ContainSubstring("Not inside a Git repo"))
-			Expect(".jira").NotTo(BeAnExistingFile())
+			Expect(".jitt.yaml").NotTo(BeAnExistingFile())
 		})
 
 		It("should show helpful help message", func() {
@@ -63,7 +62,7 @@ var _ = Describe("jitt init command", func() {
 			output := string(session.Out.Contents())
 			Expect(output).To(ContainSubstring("jitt - Jira + Git + Tiny Tooling"))
 			Expect(output).To(ContainSubstring("init [project]"))
-			Expect(output).To(ContainSubstring("Initialize .jira configuration file"))
+			Expect(output).To(ContainSubstring("Initialize .jitt.yaml configuration file"))
 		})
 	})
 
@@ -72,41 +71,42 @@ var _ = Describe("jitt init command", func() {
 			Expect(os.Mkdir(filepath.Join(tmpDir, ".git"), 0o755)).To(Succeed())
 		})
 
-		Context("with no existing .jira file", func() {
-			It("should create .jira file with default content and show success message", func() {
+		Context("with no existing config file", func() {
+			It("should create .jitt.yaml file with empty project and show success message", func() {
 				command := exec.Command(pathToJittBinary, "init")
 				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
 
 				Eventually(session).Should(gexec.Exit(0))
-				Expect(string(session.Out.Contents())).To(ContainSubstring(".jira created"))
+				Expect(string(session.Out.Contents())).To(ContainSubstring(".jitt.yaml created"))
 
-				// Verify file was created with correct content
-				Expect(".jira").To(BeAnExistingFile())
-				content, err := os.ReadFile(".jira")
+				// Verify file was created with YAML structure
+				Expect(".jitt.yaml").To(BeAnExistingFile())
+				content, err := os.ReadFile(".jitt.yaml")
 				Expect(err).To(Succeed())
-				Expect(string(content)).To(Equal("# jitt config\n"))
+				Expect(string(content)).To(ContainSubstring("jira:"))
+				Expect(string(content)).To(ContainSubstring("project: \"\""))
 			})
 
-			It("should create .jira file with project when provided", func() {
+			It("should create .jitt.yaml file with project when provided", func() {
 				command := exec.Command(pathToJittBinary, "init", "TESTPROJ")
 				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
 
 				Eventually(session).Should(gexec.Exit(0))
-				Expect(string(session.Out.Contents())).To(ContainSubstring(".jira created"))
+				Expect(string(session.Out.Contents())).To(ContainSubstring(".jitt.yaml created"))
 
-				// Verify file has project configuration
-				content, err := os.ReadFile(".jira")
+				// Verify file has project configuration in YAML format
+				content, err := os.ReadFile(".jitt.yaml")
 				Expect(err).To(Succeed())
-				contentStr := strings.TrimSpace(string(content))
-				Expect(contentStr).To(Equal(`project = "TESTPROJ"`))
+				Expect(string(content)).To(ContainSubstring("jira:"))
+				Expect(string(content)).To(ContainSubstring("project: TESTPROJ"))
 			})
 		})
 
-		Context("with existing .jira file", func() {
+		Context("with existing .jitt.yaml file", func() {
 			BeforeEach(func() {
-				Expect(os.WriteFile(".jira", []byte("existing config"), 0o600)).To(Succeed())
+				Expect(os.WriteFile(".jitt.yaml", []byte("jira:\n  project: existing"), 0o600)).To(Succeed())
 			})
 
 			It("should refuse to overwrite and show helpful error", func() {
@@ -115,13 +115,13 @@ var _ = Describe("jitt init command", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Eventually(session).Should(gexec.Exit(1))
-				Expect(string(session.Err.Contents())).To(ContainSubstring(".jira already exists"))
+				Expect(string(session.Err.Contents())).To(ContainSubstring(".jitt.yaml already exists"))
 				Expect(string(session.Err.Contents())).To(ContainSubstring("not overwriting"))
 
 				// Verify original content is preserved
-				content, err := os.ReadFile(".jira")
+				content, err := os.ReadFile(".jitt.yaml")
 				Expect(err).To(Succeed())
-				Expect(string(content)).To(Equal("existing config"))
+				Expect(string(content)).To(Equal("jira:\n  project: existing"))
 			})
 		})
 	})

@@ -95,4 +95,7 @@ secrets.json
 # Debug files
 debug
 __debug_bin*
+
+# jitt configuration (contains project-specific settings)
 .jira
+.jitt.yaml
