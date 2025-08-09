@@ -125,4 +125,29 @@ var _ = Describe("jitt init command", func() {
 			})
 		})
 	})
+
+	Context("with no arguments", func() {
+		It("should show usage and exit with error", func() {
+			command := exec.Command(pathToJittBinary)
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(session).Should(gexec.Exit(1))
+			output := string(session.Out.Contents())
+			Expect(output).To(ContainSubstring("jitt - Jira + Git + Tiny Tooling"))
+			Expect(output).To(ContainSubstring("Usage: jitt <command>"))
+		})
+	})
+
+	Context("with unknown command", func() {
+		It("should show error and usage", func() {
+			command := exec.Command(pathToJittBinary, "unknown-command")
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(session).Should(gexec.Exit(1))
+			output := string(session.Err.Contents())
+			Expect(output).To(ContainSubstring("jitt: unknown command \"unknown-command\""))
+		})
+	})
 })
